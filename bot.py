@@ -8,7 +8,7 @@ from threading import Thread
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 # =========================
-# ENV
+# ENV VARIABLES
 # =========================
 
 TOKEN = os.getenv("TOKEN")
@@ -26,12 +26,13 @@ def home():
     return "Shikari Bot Running"
 
 def run():
-    app.run(host="0.0.0.0", port=8080)
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)
 
-Thread(target=run).start()
+Thread(target=run, daemon=True).start()
 
 # =========================
-# BOT
+# BOT START
 # =========================
 
 bot = telebot.TeleBot(TOKEN)
@@ -54,7 +55,7 @@ PRICES = {
 user_data = {}
 
 # =========================
-# START
+# START COMMAND
 # =========================
 
 @bot.message_handler(commands=['start'])
@@ -78,8 +79,22 @@ def start(message):
     markup = InlineKeyboardMarkup(row_width=2)
 
     markup.add(
-        InlineKeyboardButton("🎮 SELECT LOADER", callback_data="loader_menu"),
-        InlineKeyboardButton("📞 SUPPORT", url="https://t.me/SHIKARI067")
+        InlineKeyboardButton(
+            "🎮 SELECT LOADER",
+            callback_data="loader_menu"
+        ),
+
+        InlineKeyboardButton(
+            "📞 SUPPORT",
+            url="https://t.me/Shikari067"
+        )
+    )
+
+    markup.add(
+        InlineKeyboardButton(
+            "⚠️ ANY PROBLEM CONTACT",
+            url="https://t.me/Shikari067"
+        )
     )
 
     bot.send_message(
@@ -98,17 +113,34 @@ def loader_menu(call):
     markup = InlineKeyboardMarkup(row_width=2)
 
     markup.add(
-        InlineKeyboardButton("💀 X Silent", callback_data="loader_xsilent"),
-        InlineKeyboardButton("⚡ Ztrax Bypass", callback_data="loader_ztrax")
+        InlineKeyboardButton(
+            "💀 X Silent",
+            callback_data="loader_xsilent"
+        ),
+
+        InlineKeyboardButton(
+            "⚡ Ztrax Bypass",
+            callback_data="loader_ztrax"
+        )
     )
 
     markup.add(
-        InlineKeyboardButton("🧠 Nebula ESP", callback_data="loader_nebula"),
-        InlineKeyboardButton("👑 King Android", callback_data="loader_king")
+        InlineKeyboardButton(
+            "🧠 Nebula ESP",
+            callback_data="loader_nebula"
+        ),
+
+        InlineKeyboardButton(
+            "👑 King Android",
+            callback_data="loader_king"
+        )
     )
 
     markup.add(
-        InlineKeyboardButton("🔙 BACK", callback_data="back_start")
+        InlineKeyboardButton(
+            "🔙 BACK",
+            callback_data="back_start"
+        )
     )
 
     bot.edit_message_text(
@@ -119,14 +151,17 @@ def loader_menu(call):
     )
 
 # =========================
-# BACK
+# BACK BUTTON
 # =========================
 
 @bot.callback_query_handler(func=lambda call: call.data == "back_start")
 def back_start(call):
 
     try:
-        bot.delete_message(call.message.chat.id, call.message.message_id)
+        bot.delete_message(
+            call.message.chat.id,
+            call.message.message_id
+        )
     except:
         pass
 
@@ -148,21 +183,44 @@ def select_loader(call):
     markup = InlineKeyboardMarkup(row_width=2)
 
     markup.add(
-        InlineKeyboardButton("🔥 1 Day - ₹120", callback_data="plan_1d"),
-        InlineKeyboardButton("⚡ 3 Day - ₹250", callback_data="plan_3d")
+        InlineKeyboardButton(
+            "🔥 1 Day - ₹120",
+            callback_data="plan_1d"
+        ),
+
+        InlineKeyboardButton(
+            "⚡ 3 Day - ₹250",
+            callback_data="plan_3d"
+        )
     )
 
     markup.add(
-        InlineKeyboardButton("💎 7 Day - ₹499", callback_data="plan_7d"),
-        InlineKeyboardButton("👑 30 Day - ₹699", callback_data="plan_30d")
+        InlineKeyboardButton(
+            "💎 7 Day - ₹499",
+            callback_data="plan_7d"
+        ),
+
+        InlineKeyboardButton(
+            "👑 30 Day - ₹699",
+            callback_data="plan_30d"
+        )
     )
 
     markup.add(
-        InlineKeyboardButton("🔙 BACK", callback_data="loader_menu")
+        InlineKeyboardButton(
+            "🔙 BACK",
+            callback_data="loader_menu"
+        )
     )
 
     bot.edit_message_text(
-        f"💀 {loader.upper()} Selected\n\n⚡ Choose Your Plan",
+        f"""
+💀 {loader.upper()} Selected
+
+━━━━━━━━━━━━━━━━━━
+⚡ Choose Your Plan
+━━━━━━━━━━━━━━━━━━
+""",
         call.message.chat.id,
         call.message.message_id,
         reply_markup=markup
@@ -208,12 +266,15 @@ def plan_select(call):
 
 📲 Scan QR & Pay
 📤 Send Screenshot After Payment
+
+⚠️ Any Problem Contact
+@Shikari067
 """,
         reply_markup=markup
     )
 
 # =========================
-# SEND SS
+# SEND SCREENSHOT
 # =========================
 
 @bot.callback_query_handler(func=lambda call: call.data == "send_ss")
@@ -221,11 +282,15 @@ def send_ss(call):
 
     bot.send_message(
         call.message.chat.id,
-        "📤 Send Payment Screenshot"
+        """
+📤 Send Payment Screenshot
+
+⚠️ Fake Payment = Permanent Ban
+"""
     )
 
 # =========================
-# PHOTO HANDLER
+# SCREENSHOT HANDLER
 # =========================
 
 @bot.message_handler(content_types=['photo'])
@@ -239,10 +304,17 @@ def photo_handler(message):
     loader = user_data[user_id]["loader"]
     plan = user_data[user_id]["plan"]
 
+    username = message.from_user.username
+
+    if username:
+        username = f"@{username}"
+    else:
+        username = "No Username"
+
     caption = f"""
 💸 NEW PAYMENT REQUEST
 
-👤 User: @{message.from_user.username}
+👤 User: {username}
 🆔 ID: {user_id}
 
 🎮 Loader: {loader}
@@ -274,7 +346,11 @@ def photo_handler(message):
 
     bot.reply_to(
         message,
-        "⏳ Payment Submitted\n\nPlease Wait For Admin Approval"
+        """
+⏳ Payment Submitted
+
+Please Wait For Admin Approval
+"""
     )
 
 # =========================
@@ -335,6 +411,9 @@ def approve(call):
 
 ⚡ Loader: {loader}
 📦 Plan: {plan}
+
+⚠️ Any Problem Contact
+@Shikari067
 """
 
     bot.send_message(
@@ -342,7 +421,10 @@ def approve(call):
         text
     )
 
-    bot.answer_callback_query(call.id, "Approved")
+    bot.answer_callback_query(
+        call.id,
+        "Approved"
+    )
 
 # =========================
 # REJECT
@@ -358,15 +440,23 @@ def reject(call):
 
     bot.send_message(
         user_id,
-        "❌ Payment Rejected"
+        """
+❌ Payment Rejected
+
+⚠️ Any Problem Contact
+@Shikari067
+"""
     )
 
-    bot.answer_callback_query(call.id, "Rejected")
+    bot.answer_callback_query(
+        call.id,
+        "Rejected"
+    )
 
 # =========================
-# RUN
+# RUN BOT
 # =========================
 
 print("Bot Running...")
 
-bot.infinity_polling()
+bot.infinity_polling(skip_pending=True)
