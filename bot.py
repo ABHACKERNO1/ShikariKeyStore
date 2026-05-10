@@ -1,14 +1,18 @@
 import os
-import telebot
-import qrcode
-
 from io import BytesIO
-from flask import Flask
 from threading import Thread
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+
+import qrcode
+import telebot
+
+from flask import Flask
+from telebot.types import (
+    InlineKeyboardMarkup,
+    InlineKeyboardButton
+)
 
 # =========================
-# ENV VARIABLES
+# ENV
 # =========================
 
 TOKEN = os.getenv("TOKEN")
@@ -16,14 +20,20 @@ UPI_ID = os.getenv("UPI_ID")
 ADMIN_ID = int(os.getenv("ADMIN_ID"))
 
 # =========================
-# FLASK SERVER
+# BOT
+# =========================
+
+bot = telebot.TeleBot(TOKEN)
+
+# =========================
+# FLASK
 # =========================
 
 app = Flask(__name__)
 
-@app.route('/')
+@app.route("/")
 def home():
-    return "Shikari Bot Running"
+    return "Bot Running"
 
 def run():
     port = int(os.environ.get("PORT", 8080))
@@ -32,10 +42,15 @@ def run():
 Thread(target=run, daemon=True).start()
 
 # =========================
-# BOT START
+# PRODUCTS
 # =========================
 
-bot = telebot.TeleBot(TOKEN)
+PRODUCTS = {
+    "alpha": "🔥 Alpha Premium",
+    "nova": "⚡ Nova Ultra",
+    "shadow": "🌑 Shadow Pro",
+    "phantom": "👑 Phantom VIP"
+}
 
 # =========================
 # PRICES
@@ -55,45 +70,45 @@ PRICES = {
 user_data = {}
 
 # =========================
-# START COMMAND
+# START
 # =========================
 
 @bot.message_handler(commands=['start'])
 def start(message):
 
     text = """
-𝗪𝗲𝗹𝗰𝗼𝗺𝗲 𝘁𝗼 𝙎𝙝𝙞𝙠𝙖𝙧𝙞 𝙆𝙚𝙮 𝙎𝙩𝙤𝙧𝙚 👋
+🎮 𝗣𝗥𝗘𝗠𝗜𝗨𝗠 𝗦𝗧𝗢𝗥𝗘
 
-━━━━━━━━━━━━━━━━━━
-
-𝐇𝐞𝐫𝐞 𝐘𝐨𝐮 𝐂𝐚𝐧 𝐏𝐮𝐫𝐜𝐡𝐚𝐬𝐞
-𝐀𝐥𝐥 𝐓𝐆 𝐏𝐫𝐞𝐦𝐢𝐮𝐦 𝐇𝐚𝐜𝐤
-
+━━━━━━━━━━━━━━━━━━━
 ⚡ Instant Delivery
 🔐 Secure System
 💳 Easy Payment
-
-━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━
 """
 
     markup = InlineKeyboardMarkup(row_width=2)
 
     markup.add(
         InlineKeyboardButton(
-            "🎮 SELECT LOADER",
-            callback_data="loader_menu"
+            "🛒 Products",
+            callback_data="products"
         ),
 
         InlineKeyboardButton(
-            "📞 SUPPORT",
-            url="https://t.me/Shikari067"
+            "📞 Support",
+            url="https://t.me/yourusername"
         )
     )
 
     markup.add(
         InlineKeyboardButton(
-            "⚠️ ANY PROBLEM CONTACT",
-            url="https://t.me/Shikari067"
+            "📢 Updates",
+            url="https://t.me/yourusername"
+        ),
+
+        InlineKeyboardButton(
+            "ℹ️ Help",
+            callback_data="help"
         )
     )
 
@@ -104,58 +119,101 @@ def start(message):
     )
 
 # =========================
-# LOADER MENU
+# HELP
 # =========================
 
-@bot.callback_query_handler(func=lambda call: call.data == "loader_menu")
-def loader_menu(call):
+@bot.callback_query_handler(func=lambda call: call.data == "help")
+def help_menu(call):
 
-    markup = InlineKeyboardMarkup(row_width=2)
+    text = """
+📌 HOW TO BUY
 
-    markup.add(
-        InlineKeyboardButton(
-            "💀 X Silent",
-            callback_data="loader_xsilent"
-        ),
+1️⃣ Select Product
+2️⃣ Select Plan
+3️⃣ Make Payment
+4️⃣ Send Screenshot
+5️⃣ Get Delivery
 
-        InlineKeyboardButton(
-            "⚡ Ztrax Bypass",
-            callback_data="loader_ztrax"
-        )
-    )
+⚠️ Fake Payments = Ban
+"""
 
-    markup.add(
-        InlineKeyboardButton(
-            "🧠 Nebula ESP",
-            callback_data="loader_nebula"
-        ),
-
-        InlineKeyboardButton(
-            "👑 King Android",
-            callback_data="loader_king"
-        )
-    )
+    markup = InlineKeyboardMarkup()
 
     markup.add(
         InlineKeyboardButton(
-            "🔙 BACK",
+            "🔙 Back",
             callback_data="back_start"
         )
     )
 
     bot.edit_message_text(
-        "🎮 Select Your Loader",
+        text,
         call.message.chat.id,
         call.message.message_id,
         reply_markup=markup
     )
 
 # =========================
-# BACK BUTTON
+# PRODUCTS MENU
+# =========================
+
+@bot.callback_query_handler(func=lambda call: call.data == "products")
+def products(call):
+
+    text = """
+🛒 𝗦𝗘𝗟𝗘𝗖𝗧 𝗣𝗥𝗢𝗗𝗨𝗖𝗧
+
+━━━━━━━━━━━━━━━━━━━
+Choose Your Product
+━━━━━━━━━━━━━━━━━━━
+"""
+
+    markup = InlineKeyboardMarkup(row_width=2)
+
+    markup.add(
+        InlineKeyboardButton(
+            "🔥 Alpha",
+            callback_data="product_alpha"
+        ),
+
+        InlineKeyboardButton(
+            "⚡ Nova",
+            callback_data="product_nova"
+        )
+    )
+
+    markup.add(
+        InlineKeyboardButton(
+            "🌑 Shadow",
+            callback_data="product_shadow"
+        ),
+
+        InlineKeyboardButton(
+            "👑 Phantom",
+            callback_data="product_phantom"
+        )
+    )
+
+    markup.add(
+        InlineKeyboardButton(
+            "🔙 Back",
+            callback_data="back_start"
+        )
+    )
+
+    bot.edit_message_text(
+        text,
+        call.message.chat.id,
+        call.message.message_id,
+        reply_markup=markup
+    )
+
+# =========================
+# BACK
 # =========================
 
 @bot.callback_query_handler(func=lambda call: call.data == "back_start")
-def back_start(call):
+def back(call):
 
     try:
         bot.delete_message(
@@ -168,59 +226,61 @@ def back_start(call):
     start(call.message)
 
 # =========================
-# LOADER SELECT
+# PRODUCT SELECT
 # =========================
 
-@bot.callback_query_handler(func=lambda call: call.data.startswith("loader_"))
-def select_loader(call):
+@bot.callback_query_handler(func=lambda call: call.data.startswith("product_"))
+def product_select(call):
 
-    loader = call.data.replace("loader_", "")
+    product = call.data.replace("product_", "")
 
     user_data[call.from_user.id] = {
-        "loader": loader
+        "product": product
     }
+
+    text = f"""
+{PRODUCTS[product]}
+
+━━━━━━━━━━━━━━━━━━━
+💎 Select Your Plan
+━━━━━━━━━━━━━━━━━━━
+"""
 
     markup = InlineKeyboardMarkup(row_width=2)
 
     markup.add(
         InlineKeyboardButton(
-            "🔥 1 Day - ₹120",
+            "🔥 1 Day\n₹120",
             callback_data="plan_1d"
         ),
 
         InlineKeyboardButton(
-            "⚡ 3 Day - ₹250",
+            "⚡ 3 Day\n₹250",
             callback_data="plan_3d"
         )
     )
 
     markup.add(
         InlineKeyboardButton(
-            "💎 7 Day - ₹499",
+            "💎 7 Day\n₹499",
             callback_data="plan_7d"
         ),
 
         InlineKeyboardButton(
-            "👑 30 Day - ₹699",
+            "👑 30 Day\n₹699",
             callback_data="plan_30d"
         )
     )
 
     markup.add(
         InlineKeyboardButton(
-            "🔙 BACK",
-            callback_data="loader_menu"
+            "🔙 Back",
+            callback_data="products"
         )
     )
 
     bot.edit_message_text(
-        f"""
-💀 {loader.upper()} Selected
-
-━━━━━━━━━━━━━━━━━━
-⚡ Choose Your Plan
-━━━━━━━━━━━━━━━━━━
-""",
+        text,
         call.message.chat.id,
         call.message.message_id,
         reply_markup=markup
@@ -239,7 +299,7 @@ def plan_select(call):
 
     amount = PRICES[plan]
 
-    upi_link = f"upi://pay?pa={UPI_ID}&pn=Shikari&am={amount}"
+    upi_link = f"upi://pay?pa={UPI_ID}&pn=PremiumStore&am={amount}"
 
     qr = qrcode.make(upi_link)
 
@@ -253,7 +313,7 @@ def plan_select(call):
 
     markup.add(
         InlineKeyboardButton(
-            "📤 SEND SCREENSHOT",
+            "📤 Send Screenshot",
             callback_data="send_ss"
         )
     )
@@ -266,9 +326,6 @@ def plan_select(call):
 
 📲 Scan QR & Pay
 📤 Send Screenshot After Payment
-
-⚠️ Any Problem Contact
-@Shikari067
 """,
         reply_markup=markup
     )
@@ -284,8 +341,6 @@ def send_ss(call):
         call.message.chat.id,
         """
 📤 Send Payment Screenshot
-
-⚠️ Fake Payment = Permanent Ban
 """
     )
 
@@ -301,7 +356,7 @@ def photo_handler(message):
     if user_id not in user_data:
         return
 
-    loader = user_data[user_id]["loader"]
+    product = user_data[user_id]["product"]
     plan = user_data[user_id]["plan"]
 
     username = message.from_user.username
@@ -312,12 +367,12 @@ def photo_handler(message):
         username = "No Username"
 
     caption = f"""
-💸 NEW PAYMENT REQUEST
+💸 NEW PAYMENT
 
 👤 User: {username}
 🆔 ID: {user_id}
 
-🎮 Loader: {loader}
+🛒 Product: {product}
 📦 Plan: {plan}
 """
 
@@ -325,12 +380,12 @@ def photo_handler(message):
 
     markup.add(
         InlineKeyboardButton(
-            "✅ APPROVE",
+            "✅ Approve",
             callback_data=f"approve_{user_id}"
         ),
 
         InlineKeyboardButton(
-            "❌ REJECT",
+            "❌ Reject",
             callback_data=f"reject_{user_id}"
         )
     )
@@ -346,36 +401,8 @@ def photo_handler(message):
 
     bot.reply_to(
         message,
-        """
-⏳ Payment Submitted
-
-Please Wait For Admin Approval
-"""
+        "⏳ Waiting For Admin Approval"
     )
-
-# =========================
-# GET KEY
-# =========================
-
-def get_key(loader, plan):
-
-    filename = f"{loader}_{plan}.txt"
-
-    if not os.path.exists(filename):
-        return None
-
-    with open(filename, "r") as f:
-        keys = f.readlines()
-
-    if len(keys) == 0:
-        return None
-
-    key = keys[0].strip()
-
-    with open(filename, "w") as f:
-        f.writelines(keys[1:])
-
-    return key
 
 # =========================
 # APPROVE
@@ -389,36 +416,13 @@ def approve(call):
 
     user_id = int(call.data.split("_")[1])
 
-    loader = user_data[user_id]["loader"]
-    plan = user_data[user_id]["plan"]
-
-    key = get_key(loader, plan)
-
-    if not key:
-
-        bot.send_message(
-            call.message.chat.id,
-            "❌ No Keys Available"
-        )
-
-        return
-
-    text = f"""
-🎉 Payment Approved
-
-🔑 KEY:
-{key}
-
-⚡ Loader: {loader}
-📦 Plan: {plan}
-
-⚠️ Any Problem Contact
-@Shikari067
-"""
-
     bot.send_message(
         user_id,
-        text
+        """
+🎉 Payment Approved
+
+✅ Your order has been confirmed.
+"""
     )
 
     bot.answer_callback_query(
@@ -442,9 +446,6 @@ def reject(call):
         user_id,
         """
 ❌ Payment Rejected
-
-⚠️ Any Problem Contact
-@Shikari067
 """
     )
 
@@ -454,7 +455,7 @@ def reject(call):
     )
 
 # =========================
-# RUN BOT
+# RUN
 # =========================
 
 print("Bot Running...")
