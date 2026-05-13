@@ -6,9 +6,12 @@ import qrcode
 import telebot
 
 from flask import Flask
+
 from telebot.types import (
     InlineKeyboardMarkup,
-    InlineKeyboardButton
+    InlineKeyboardButton,
+    ReplyKeyboardMarkup,
+    KeyboardButton
 )
 
 # =========================
@@ -77,7 +80,7 @@ user_data = {}
 def start(message):
 
     text = """
-🎮 𝗣𝗥𝗘𝗠𝗜𝗨𝗠 𝗦𝗧𝗢𝗥𝗘
+🎮 PREMIUM STORE
 
 ━━━━━━━━━━━━━━━━━━━
 ⚡ Instant Delivery
@@ -86,30 +89,32 @@ def start(message):
 ━━━━━━━━━━━━━━━━━━━
 """
 
-    markup = InlineKeyboardMarkup(row_width=2)
-
-    markup.add(
-        InlineKeyboardButton(
-            "🛒 Products",
-            callback_data="products"
-        ),
-
-        InlineKeyboardButton(
-            "📞 Support",
-            url="https://t.me/yourusername"
-        )
+    markup = ReplyKeyboardMarkup(
+        resize_keyboard=True,
+        row_width=2
     )
 
+    # Row 1
     markup.add(
-        InlineKeyboardButton(
-            "📢 Updates",
-            url="https://t.me/yourusername"
-        ),
+        KeyboardButton("🔥 Alpha"),
+        KeyboardButton("⚡ Nova")
+    )
 
-        InlineKeyboardButton(
-            "ℹ️ Help",
-            callback_data="help"
-        )
+    # Row 2
+    markup.add(
+        KeyboardButton("🌑 Shadow"),
+        KeyboardButton("👑 Phantom")
+    )
+
+    # Row 3
+    markup.add(
+        KeyboardButton("📞 Support"),
+        KeyboardButton("ℹ️ Help")
+    )
+
+    # Last Row
+    markup.add(
+        KeyboardButton("🔄 Refresh")
     )
 
     bot.send_message(
@@ -119,122 +124,66 @@ def start(message):
     )
 
 # =========================
-# HELP
+# BUTTON HANDLERS
 # =========================
 
-@bot.callback_query_handler(func=lambda call: call.data == "help")
-def help_menu(call):
+@bot.message_handler(func=lambda m: m.text == "🔥 Alpha")
+def alpha_btn(message):
+    open_product(message, "alpha")
 
-    text = """
+
+@bot.message_handler(func=lambda m: m.text == "⚡ Nova")
+def nova_btn(message):
+    open_product(message, "nova")
+
+
+@bot.message_handler(func=lambda m: m.text == "🌑 Shadow")
+def shadow_btn(message):
+    open_product(message, "shadow")
+
+
+@bot.message_handler(func=lambda m: m.text == "👑 Phantom")
+def phantom_btn(message):
+    open_product(message, "phantom")
+
+
+@bot.message_handler(func=lambda m: m.text == "📞 Support")
+def support_btn(message):
+
+    bot.send_message(
+        message.chat.id,
+        "📞 Support: @yourusername"
+    )
+
+
+@bot.message_handler(func=lambda m: m.text == "ℹ️ Help")
+def help_btn(message):
+
+    bot.send_message(
+        message.chat.id,
+        """
 📌 HOW TO BUY
 
 1️⃣ Select Product
 2️⃣ Select Plan
 3️⃣ Make Payment
 4️⃣ Send Screenshot
-5️⃣ Get Delivery
-
-⚠️ Fake Payments = Ban
+5️⃣ Wait For Approval
 """
-
-    markup = InlineKeyboardMarkup()
-
-    markup.add(
-        InlineKeyboardButton(
-            "🔙 Back",
-            callback_data="back_start"
-        )
     )
 
-    bot.edit_message_text(
-        text,
-        call.message.chat.id,
-        call.message.message_id,
-        reply_markup=markup
-    )
+
+@bot.message_handler(func=lambda m: m.text == "🔄 Refresh")
+def refresh_btn(message):
+    start(message)
 
 # =========================
-# PRODUCTS MENU
+# OPEN PRODUCT
 # =========================
 
-@bot.callback_query_handler(func=lambda call: call.data == "products")
-def products(call):
+def open_product(message, product):
 
-    text = """
-🛒 𝗦𝗘𝗟𝗘𝗖𝗧 𝗣𝗥𝗢𝗗𝗨𝗖𝗧
-
-━━━━━━━━━━━━━━━━━━━
-Choose Your Product
-━━━━━━━━━━━━━━━━━━━
-"""
-
-    markup = InlineKeyboardMarkup(row_width=2)
-
-    markup.add(
-        InlineKeyboardButton(
-            "🔥 Alpha",
-            callback_data="product_alpha"
-        ),
-
-        InlineKeyboardButton(
-            "⚡ Nova",
-            callback_data="product_nova"
-        )
-    )
-
-    markup.add(
-        InlineKeyboardButton(
-            "🌑 Shadow",
-            callback_data="product_shadow"
-        ),
-
-        InlineKeyboardButton(
-            "👑 Phantom",
-            callback_data="product_phantom"
-        )
-    )
-
-    markup.add(
-        InlineKeyboardButton(
-            "🔙 Back",
-            callback_data="back_start"
-        )
-    )
-
-    bot.edit_message_text(
-        text,
-        call.message.chat.id,
-        call.message.message_id,
-        reply_markup=markup
-    )
-
-# =========================
-# BACK
-# =========================
-
-@bot.callback_query_handler(func=lambda call: call.data == "back_start")
-def back(call):
-
-    try:
-        bot.delete_message(
-            call.message.chat.id,
-            call.message.message_id
-        )
-    except:
-        pass
-
-    start(call.message)
-
-# =========================
-# PRODUCT SELECT
-# =========================
-
-@bot.callback_query_handler(func=lambda call: call.data.startswith("product_"))
-def product_select(call):
-
-    product = call.data.replace("product_", "")
-
-    user_data[call.from_user.id] = {
+    user_data[message.from_user.id] = {
         "product": product
     }
 
@@ -272,17 +221,9 @@ def product_select(call):
         )
     )
 
-    markup.add(
-        InlineKeyboardButton(
-            "🔙 Back",
-            callback_data="products"
-        )
-    )
-
-    bot.edit_message_text(
+    bot.send_message(
+        message.chat.id,
         text,
-        call.message.chat.id,
-        call.message.message_id,
         reply_markup=markup
     )
 
@@ -339,9 +280,7 @@ def send_ss(call):
 
     bot.send_message(
         call.message.chat.id,
-        """
-📤 Send Payment Screenshot
-"""
+        "📤 Send Payment Screenshot"
     )
 
 # =========================
